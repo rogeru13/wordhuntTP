@@ -127,8 +127,26 @@ def searchBoard(board, word):
     return False
 
 def drawHint(app):
-    if app.hint:
-        drawLabel(app.hint, 424, 831, align = 'left', size = 30, fill = 'white')
+    if app.hintGreen:
+        if app.hintsRemaining > 1:
+            drawLabel(f'Good! {app.hintsRemaining} hints left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True)
+        elif app.hintsRemaining == 1:
+            drawLabel(f'Good! {app.hintsRemaining} hint left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True)
+        else:
+            drawLabel(f'Good! Out of hints.', 409, 830, align='center', fill='paleGreen', size=25, bold=True)
+            
+    elif app.hintsRemaining == 0 and not app.hint:
+        drawLabel('Out of hints.', 409, 830, align='center', fill='white', size=40, bold=True)
+
+    elif app.hint:
+        hintLabel = app.hint[:app.letters] + "_ " * (len(app.hint) - app.letters)
+        drawLabel(hintLabel, 410, 831, align = 'center', size = 30, fill = 'white')
+
+    # elif app.hintsRemaining >= 0:
+    #     drawLabel('Press h for hint.', 409, 830, align = 'center', fill = 'white', size = 40)
+
+    else:
+        drawLabel('Press h for hint.', 409, 830, align = 'center', size = 40, fill = 'white')
 
 
 

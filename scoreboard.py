@@ -15,7 +15,7 @@ def drawScoreboard(app):
     
     for i in range(min(5, len(finalScores))):
         drawLabel(f'{finalScores[i][0]}', 150, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
-        drawLabel(f'{finalScores[i][1]}', 462, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
+        drawLabel(f'{finalScores[i][1]}', 548, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
 
     
 7

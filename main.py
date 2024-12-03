@@ -13,7 +13,7 @@ def loadWordSet(filePath): # github citation https://github.com/dwyl/english-wor
     wordSet = set()
     with open(filePath, 'r') as file:
         for line in file:
-            word = line.strip()  # removes any extra spaces
+            word = line.strip()  # removes any extra spaces just in case
             if len(word) > 2 and len(word) < 10:  # Skips words that are less than 3 characters
                 wordSet.add(word.upper())  # makes all of them uppercase
     return wordSet
@@ -60,6 +60,10 @@ def onAppStart(app):
     # hint
     app.hint = ''
     app.hintsRemaining = 3
+    app.letters = 0
+    app.hintGreen = False  
+    app.hintFlashTime = 0  
+
 
 # ------------------------------------------------------- SIZE ADJUSTMENT -------------------------------------------------------- #
 
@@ -154,14 +158,14 @@ def onMouseDrag(app, mouseX, mouseY):
 
     # help from Elena Li (TA) and Austin 
 
-    # if the mouse is within the right scrollbar's area
+    # if the mouse in right scrollbar
     if rightScrollbarX <= mouseX <= rightScrollbarX + scrollbarWidth and boxY <= mouseY <= boxY + boxHeight:
         totalWordsHeightRight = len(app.boardWords) * app.wordHeight  # total height of all words
         relativePositionRight = (mouseY - boxY) / boxHeight #
         app.scrollOffsetRight = relativePositionRight * (totalWordsHeightRight - boxHeight)
         app.scrollOffsetRight = max(0, min(app.scrollOffsetRight, totalWordsHeightRight - boxHeight)) # hard sets height if you scroll too much
 
-    # If the mouse is within the left scrollbar's area
+    # if the mouse in  left scrollbar
     elif leftScrollbarX <= mouseX <= leftScrollbarX + scrollbarWidth and boxY <= mouseY <= boxY + boxHeight:
         totalWordsHeightLeft = len(app.userFoundWords) * app.wordHeight  # Total height of all words
         relativePositionLeft = (mouseY - boxY) / boxHeight
@@ -186,7 +190,7 @@ def onKeyPress(app, key):
 
     if app.screen == 'nameInput':
         if key == 'enter':
-            if len(app.playerName.strip()) > 0:  # ensures the name is not empty
+            if len(app.playerName) > 0:  # ensures the name is not empty
                 if app.playerName not in app.nameDict:
                     app.nameDict[app.playerName] = 0  # initialize score for the player
                 # game starts and board is created and reset
@@ -199,34 +203,50 @@ def onKeyPress(app, key):
                 app.scrollOffsetRight = 0  
                 app.scrollOffsetLeft = 0 
                 app.currentWord = ''
+                app.selectedCells= []
                 app.userFoundWords = set()
                 app.board, app.boardWords = generateValidBoard(app.wordSet)
-                app.hintsRemaining = 3
-                app.hints = ''
+                app.hint = ''
+                app.letters = 0
         elif key == 'backspace':
             app.playerName = app.playerName[:-1]
         elif len(app.playerName) < app.maxNameLength:
             if len(key) == 1 and (key.isalpha()):
                 app.playerName += key
     elif app.screen == 'board':
-        boardWordList = list(app.boardWords)
-        app.hint = boardWordList[app.hintsRemaining]
-        if key == 'h':
+        if key == 'h' and not app.hintGreen:
             if app.hintsRemaining > 0:
                 remainingWords = [word for word in app.boardWords if word not in app.userFoundWords]
-                app.hint = random.choice(remainingWords)
-                app.hintsRemaining -=1
+                app.hint = random.choice(remainingWords) # CITE THIS BOI
+                app.hintsRemaining -=1 
+                app.letters = 0
             else:
-                app.hint = "out of hints"
-
+                app.hint = ''
+                
         elif key == 'e':
             app.timer = 1
 
 
-# timer functions, resetes when hits 0
+# timer functions, resets when hits 0
 def onStep(app):
     if app.timerOn and app.timer > 0 and app.screen == 'board':
         app.timer -= 1/app.stepsPerSecond
+
+        # check if enough time has passed to reveal another letter in the hint
+        if app.hint and app.timer % 1 < (1 / app.stepsPerSecond) and not app.hintGreen:  # every 3 seconds
+            app.letters = min(app.letters + 1, len(app.hint))  # increment revealed letters, capped at the hint length
+
+        if app.hint != '' and app.hint in app.userFoundWords and not app.hintGreen:
+            app.hintGreen = True
+            app.hintFlashTime = 20
+        
+        if app.hintGreen:
+            app.hintFlashTime -= 1
+            if app.hintFlashTime <= 0:
+                app.hintGreen = False
+                app.hint = '' # check to see if '' works too
+                app.letters = 0
+
         if app.timer <= 0:
             app.timer = 0
             app.timerOn = False
@@ -235,6 +255,8 @@ def onStep(app):
             app.screen = 'gameEndScreen'
             app.playerName = ''
             app.hint = ''
+            app.hintsRemaining = 3
+            app.letters = 0
             print(app.nameDict)
         
 
