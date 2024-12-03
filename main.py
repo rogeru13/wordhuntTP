@@ -7,6 +7,7 @@ from homescreen import *
 from scoreboard import *
 from gameEndScreen import *
 from drawNameInput import *
+import random
 
 def loadWordSet(filePath): # github citation https://github.com/dwyl/english-words/blob/master/read_english_dictionary.py (loading in a dictionary file)
     wordSet = set()
@@ -28,7 +29,6 @@ def onAppStart(app):
     app.currentWord = ''
     app.userFoundWords = set()
     app.currentScore = 0
-    app.overallScores = []
     app.game = False
 
     # timer
@@ -40,10 +40,10 @@ def onAppStart(app):
     app.wordSet = loadWordSet('english.txt')
     app.board, app.boardWords = generateValidBoard(app.wordSet)
     
-    # player names
+    # player name input
     app.playerName = ""
     app.nameDict = {}
-    app.maxNameLength = 10
+    app.maxNameLength = 8
 
     # sizes
     app.cellSize = 145
@@ -53,16 +53,13 @@ def onAppStart(app):
     app.boardTop = app.height/2 - app.cellSize*2 + 100
 
     # scroll
-    app.scrollOffset = 0
-    app.scrollOffset2 = 0
+    app.scrollOffsetRight = 0
+    app.scrollOffsetLeft = 0
+    app.wordHeight = 30  # word spacing
 
-    app.scrollSpeed = 20
-
-    app.boxLeftX = app.width - 315
-    app.boxTopY = 175
-    app.boxWidth = app.width / 3
-    app.boxHeight = app.height / 2.5
-    app.wordHeight = 30  # Word spacing
+    # hint
+    app.hint = ''
+    app.hintsRemaining = 3
 
 # ------------------------------------------------------- SIZE ADJUSTMENT -------------------------------------------------------- #
 
@@ -85,6 +82,8 @@ def redrawAll(app):
     elif app.screen == 'board':
         drawBoard(app)
         drawScore(app)
+        drawHint(app)
+
     elif app.screen =='scoreboard':
         drawScoreboard(app)
     elif app.screen == 'gameEndScreen':
@@ -98,17 +97,13 @@ def onMousePress(app, mouseX, mouseY):
             app.screen = 'nameInput'
         elif 250 <= mouseX <= 550 and 495 <= mouseY <= 585:
             app.screen = 'scoreboard'
-   
-    # elif app.screen == 'board':
-    #     app.screen = 'board'
-    #     app.game = True
-    #     app.timerOn = True
-    #     app.timer = 60
-    #     app.currentScore = 0
-    #     app.scrollOffset = 0  # Reset scroll offset for new game
-    #     app.currentWord = ''
-    #     app.userFoundWords = set()
-    #     app.board, app.boardWords = generateValidBoard(app.wordSet)
+
+    elif app.screen == 'gameEndScreen':
+        if 216 <= mouseX <= 596 and 678 <= mouseY <= 816:
+            app.screen = 'home'
+    elif app.screen == 'scoreboard':
+        if 594<= mouseX <= 778 and 838 <= mouseY <= 900:
+            app.screen = 'home'
 
     # reset the selected cells and word
     if app.game:
@@ -147,7 +142,7 @@ def onMouseDrag(app, mouseX, mouseY):
                     app.selectedCells.append(cell)
                     app.currentWord += app.board[currentRow][currentCol]
 
-
+    # define rectangle bounds for clarity
     leftBoxX = 50
     rightBoxX = app.width - 315
     boxY = 175
@@ -157,21 +152,21 @@ def onMouseDrag(app, mouseX, mouseY):
     leftScrollbarX = leftBoxX + boxWidth - 10
     scrollbarWidth = 10
 
-# -------- READ OVER THIS BOI ---------- #
+    # help from Elena Li (TA) and Austin 
+
+    # if the mouse is within the right scrollbar's area
     if rightScrollbarX <= mouseX <= rightScrollbarX + scrollbarWidth and boxY <= mouseY <= boxY + boxHeight:
-        # Calculate new scroll offset based on mouse position
-        totalWordsHeight = len(app.boardWords) * 30  # Total height of all words
-        relativePosition = (mouseY - boxY) / boxHeight
-        app.scrollOffset = relativePosition * (totalWordsHeight - boxHeight)
-        app.scrollOffset = max(0, min(app.scrollOffset, totalWordsHeight - boxHeight))  # Clamp value
+        totalWordsHeightRight = len(app.boardWords) * app.wordHeight  # total height of all words
+        relativePositionRight = (mouseY - boxY) / boxHeight #
+        app.scrollOffsetRight = relativePositionRight * (totalWordsHeightRight - boxHeight)
+        app.scrollOffsetRight = max(0, min(app.scrollOffsetRight, totalWordsHeightRight - boxHeight)) # hard sets height if you scroll too much
 
-
-    elif leftScrollbarX <= mouseX <= (leftScrollbarX + scrollbarWidth) and boxY <= mouseY <= boxY + boxHeight:
-        # Calculate new scroll offset based on mouse position
-        totalWordsHeight2 = len(app.userFoundWords) * 30  # Total height of all words
-        relativePosition2 = (mouseY - boxY) / boxHeight
-        app.scrollOffset2 = relativePosition2 * (totalWordsHeight2 - boxHeight)
-        app.scrollOffset2 = max(0, min(app.scrollOffset2, totalWordsHeight2 - boxHeight))  # Clamp value
+    # If the mouse is within the left scrollbar's area
+    elif leftScrollbarX <= mouseX <= leftScrollbarX + scrollbarWidth and boxY <= mouseY <= boxY + boxHeight:
+        totalWordsHeightLeft = len(app.userFoundWords) * app.wordHeight  # Total height of all words
+        relativePositionLeft = (mouseY - boxY) / boxHeight
+        app.scrollOffsetLeft = relativePositionLeft * (totalWordsHeightLeft - boxHeight)
+        app.scrollOffsetLeft = max(0, min(app.scrollOffsetLeft, totalWordsHeightLeft - boxHeight)) # hard sets height if you scroll too much 
 
 
 def onMouseRelease(app, mouseX, mouseY):
@@ -188,34 +183,59 @@ def onMouseRelease(app, mouseX, mouseY):
         app.currentWord = ''
 
 def onKeyPress(app, key):
-    if app.screen == "nameInput":
-        if key == "enter":
-                # Transition to the game screen and reset the board
-                app.screen = "board"
+
+    if app.screen == 'nameInput':
+        if key == 'enter':
+            if len(app.playerName.strip()) > 0:  # ensures the name is not empty
+                if app.playerName not in app.nameDict:
+                    app.nameDict[app.playerName] = 0  # initialize score for the player
+                # game starts and board is created and reset
+                app.screen = 'board'
                 app.game = True
                 app.timerOn = True
                 app.timer = 60
+                app.hintsRemaining = 3
                 app.currentScore = 0
-                app.scrollOffset = 0  # Reset scroll offset for new game
+                app.scrollOffsetRight = 0  
+                app.scrollOffsetLeft = 0 
                 app.currentWord = ''
                 app.userFoundWords = set()
                 app.board, app.boardWords = generateValidBoard(app.wordSet)
+                app.hintsRemaining = 3
+                app.hints = ''
+        elif key == 'backspace':
+            app.playerName = app.playerName[:-1]
+        elif len(app.playerName) < app.maxNameLength:
+            if len(key) == 1 and (key.isalpha()):
+                app.playerName += key
+    elif app.screen == 'board':
+        boardWordList = list(app.boardWords)
+        app.hint = boardWordList[app.hintsRemaining]
+        if key == 'h':
+            if app.hintsRemaining > 0:
+                remainingWords = [word for word in app.boardWords if word not in app.userFoundWords]
+                app.hint = random.choice(remainingWords)
+                app.hintsRemaining -=1
+            else:
+                app.hint = "out of hints"
 
-    if key == "space":
-        app.screen = "board"
-    elif key == "l":
-        app.screen = "home"
-    elif key == 'e':
-        app.timer = 1
+        elif key == 'e':
+            app.timer = 1
 
+
+# timer functions, resetes when hits 0
 def onStep(app):
     if app.timerOn and app.timer > 0 and app.screen == 'board':
         app.timer -= 1/app.stepsPerSecond
         if app.timer <= 0:
             app.timer = 0
             app.timerOn = False
-            app.overallScores.append(app.currentScore)
+            app.game = False
+            app.nameDict[app.playerName] = app.currentScore
             app.screen = 'gameEndScreen'
+            app.playerName = ''
+            app.hint = ''
+            print(app.nameDict)
         
 
 def main():

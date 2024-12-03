@@ -28,7 +28,7 @@ def drawBoard(app):
     cellCenters = [[None for _ in range(totalCells)] for _ in range(totalCells)] # for the red line
 
     # draws background 
-    drawImage('images/background.png', app.width/2, app.height/2, align = "center") # designed in figma: https://www.figma.com/design/MdZN6ojTAYLTDaIlLjcJkc/Wordhunt---roger?node-id=0-1&node-type=canvas&t=Hb5hfmV195ld3ymW-0
+    drawImage('images/boardbackground.png', app.width/2, app.height/2, align = "center") # designed in figma: https://www.figma.com/design/MdZN6ojTAYLTDaIlLjcJkc/Wordhunt---roger?node-id=0-1&node-type=canvas&t=Hb5hfmV195ld3ymW-0
     
     # draws black board background for border
     drawRect(app.boardLeft, app.boardTop, app.cellSize * 4, app.cellSize * 4, fill='black')
@@ -125,6 +125,12 @@ def searchBoard(board, word):
                 if searchFromCell(board, word[1:], row, col, {(row, col)}):
                     return True
     return False
+
+def drawHint(app):
+    if app.hint:
+        drawLabel(app.hint, 424, 831, align = 'left', size = 30, fill = 'white')
+
+
 
 # -------------------------------------------------------   OLD BOARD GENERATION ----------------------------------------------------------- #
  

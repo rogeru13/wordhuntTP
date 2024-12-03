@@ -226,7 +226,6 @@ abbreviatory
 abbreviators
 abbreviature
 abbroachment
-abc
 abcess
 abcissa
 abcoulomb
@@ -525,7 +524,6 @@ abkari
 abkary
 abkhas
 abkhasian
-abl
 ablach
 ablactate
 ablactated
@@ -114241,11 +114239,8 @@ flaxwench
 flaxwife
 flaxwoman
 flaxwort
-flb
 flche
 flchette
-fld
-fldxt
 flea
 fleabag
 fleabags
