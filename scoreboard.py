@@ -16,7 +16,14 @@ def drawScoreboard(app):
     for i in range(min(5, len(finalScores))):
         drawLabel(f'{finalScores[i][0]}', 150, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
         drawLabel(f'{finalScores[i][1]}', 548, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
+        drawLabel(f'({app.boardLen}x{app.boardLen})', 548, 215 + 132*i, size = 15, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
 
-    
-7
-        
+
+     
+def addNameScore(filePath):
+    with open(filePath, 'r') as file:
+        for line in file:
+            word = line.strip()  # removes any extra spaces just in case
+            if len(word) > 2 and len(word) < 10:  # Skips words that are less than 3 characters
+                wordSet.add(word.upper())  # makes all of them uppercase
+    return wordSet

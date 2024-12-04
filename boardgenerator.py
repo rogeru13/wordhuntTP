@@ -13,15 +13,15 @@ def generateBoard(boardLen):
     board = [[random.choice('AAAEEEIIOOTTBCDEFGHIJKLMNOPQRSTUVWXYZ') for row in range(boardLen)] for col in range(boardLen)] # added extra vowels for more common word generation
     return board
 
-def generateValidBoard(legalWords, boardLen=4, minWords=100):
+def generateValidBoard(legalWords, minWords=1):
     while True:
-        board = generateBoard(boardLen)
+        board = generateBoard(app.boardLen)
         valid, foundWords = isLegalBoard(board, legalWords, minWords)
         if valid:
             return board, foundWords
     
 def drawBoard(app):
-    totalCells = 4  # boardLen
+    totalCells = app.boardLen  # boardLen
     totalBorder = 60  
     border = totalBorder / (totalCells + 1)  # thickness
     cellInnerSize = (app.cellSize * 4 - totalBorder) / totalCells 
@@ -77,7 +77,7 @@ def drawScore(app):
 
 def getCell(app, mouseX, mouseY):
     border = 40 # less than drawBoard border to make it easier to drag diagonally
-    totalCells = 4  
+    totalCells = app.boardLen
     cellSize = (app.cellSize * 4 - border * (totalCells + 1)) / totalCells
 
     # gets cell sizes for user to select
