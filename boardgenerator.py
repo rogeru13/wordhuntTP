@@ -13,7 +13,7 @@ def generateBoard(boardLen):
     board = [[random.choice('AAAEEEIIOOTTBCDEFGHIJKLMNOPQRSTUVWXYZ') for row in range(boardLen)] for col in range(boardLen)] # added extra vowels for more common word generation
     return board
 
-def generateValidBoard(legalWords, minWords=1):
+def generateValidBoard(legalWords, minWords=100):
     while True:
         board = generateBoard(app.boardLen)
         valid, foundWords = isLegalBoard(board, legalWords, minWords)

@@ -15,9 +15,8 @@ def drawScoreboard(app):
     
     for i in range(min(5, len(finalScores))):
         drawLabel(f'{finalScores[i][0]}', 150, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
-        drawLabel(f'{finalScores[i][1]}', 548, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
-        drawLabel(f'({app.boardLen}x{app.boardLen})', 548, 215 + 132*i, size = 15, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
-
+        drawLabel(f'{finalScores[i][1][0]}', 548, 180 + 132*i, size = 40, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
+        drawLabel(f'({finalScores[i][1][1]}x{finalScores[i][1][1]})', 548, 215 + 132*i, size = 15, bold = True, font = 'Open Sans', fill = 'white', align = 'left')
 
      
 def addNameScore(filePath):

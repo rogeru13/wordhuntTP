@@ -8,6 +8,7 @@ from scoreboard import *
 from gameEndScreen import *
 from drawNameInput import *
 from customScreen import *
+from exitScreen import *
 import random
 
 def loadWordSet(filePath): # github citation https://github.com/dwyl/english-words/blob/master/read_english_dictionary.py (loading in a dictionary file) 
@@ -28,7 +29,6 @@ def storeData(app):
     # add the csv file 
 
 def onAppStart(app):
-    # initializes random board with at least 20 words
 
     app.screen = "home"
 
@@ -43,10 +43,14 @@ def onAppStart(app):
 
     # buttons
     app.homeButtonList = [Button(250, 550, 350, 460, 'nameInput'), Button(250, 550, 495, 585, 'scoreboard'),
-                      Button(250, 550, 625, 720, 'customSize')]
+                      Button(250, 550, 625, 720, 'customSize'), Button(249, 541, 751, 845, 'exitScreen')]
     app.homeButton = Button(216, 596, 678, 816, 'home')
+    # back buttons
     app.backButton = Button(594, 778, 838, 900, 'home')
-    app.backButtonName = Button(27, 215, 22, 82, 'home')
+    app.backButtonInput = Button(27, 215, 22, 82, 'home')
+    # exit screen
+    app.stayButton = Button(303, 519, 367, 432, 'home')
+    app.exitButton = Button(303, 519, 462, 534, 'end')
 
     # timer
     app.timer = 60
@@ -56,7 +60,7 @@ def onAppStart(app):
     # board initialization
     app.wordSet = loadWordSet('english.txt')
     app.board, app.boardWords = generateValidBoard(app.wordSet)
-    
+
     # player name input
     app.playerName = ''
     app.nameDict = {}
@@ -158,12 +162,19 @@ def onMousePress(app, mouseX, mouseY):
             app.screen = 'home'
     
     elif app.screen == 'nameInput':
-        if app.backButtonName.isClicked(mouseX, mouseY):
+        if app.backButtonInput.isClicked(mouseX, mouseY):
             app.screen = 'home'
     
     elif app.screen == 'customSize':
-        if app.backButtonName.isClicked(mouseX, mouseY):
+        if app.backButtonInput.isClicked(mouseX, mouseY):
             app.screen = 'home'
+
+    elif app.screen == 'exitScreen':
+        if app.stayButton.isClicked(mouseX, mouseY):
+            print("Exit button clicked!")
+            app.screen = 'home'
+        elif app.exitButton.isClicked(mouseX, mouseY):
+            exit()
 
     # reset the selected cells and word
     if app.game:
@@ -338,7 +349,7 @@ def onStep(app):
             app.timer = 0
             app.timerOn = False
             app.game = False
-            app.nameDict[app.playerName] = app.currentScore
+            app.nameDict[app.playerName] = (app.currentScore, app.boardLen)
             app.screen = 'gameEndScreen'
             app.playerName = ''
             app.hint = ''
