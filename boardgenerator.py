@@ -4,16 +4,12 @@ import random
 
 # BOARD DRAWER
 
-# def generateBoard(boardLen):
-#     # creates an empty board that will be filled
-#     return [["" for _ in range(boardLen)] for _ in range(boardLen)]
-
 def generateBoard(boardLen):
     # Creates a board and fills it with random letters
     board = [[random.choice('AAAEEEIIOOTTBCDEFGHIJKLMNOPQRSTUVWXYZ') for row in range(boardLen)] for col in range(boardLen)] # added extra vowels for more common word generation
     return board
 
-def generateValidBoard(legalWords, minWords=100):
+def generateValidBoard(legalWords, minWords=80):
     while True:
         board = generateBoard(app.boardLen)
         valid, foundWords = isLegalBoard(board, legalWords, minWords)
@@ -60,7 +56,7 @@ def drawBoard(app):
                     drawImage("images/cellAlready.png", x0, y0, width = x1-x0, height = y1-y0)
 
             # draws letter on top of cells
-            drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=45, bold=True, font = 'monospace')
+            drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=45, bold=True, font = 'Helvetica')
 
     # draws the red lines when the user selects a cell
     for i in range(len(app.selectedCells) - 1):
@@ -70,10 +66,10 @@ def drawBoard(app):
         x2, y2 = cellCenters[row2][col2]
         drawLine(x1, y1, x2, y2, fill='red', lineWidth=7)
 
-    drawLabel(f'Time Left: {int(app.timer)}s', app.width / 2, 50, size=30, bold=True)
+    drawLabel(f'Time Left: {int(app.timer)}s', app.width / 2, 50, size=30, font = 'Peace Sans')
 
 def drawScore(app):
-    drawLabel(f'Score: {app.currentScore}', app.width/2, 100, size = 50, bold = True)
+    drawLabel(f'Score: {app.currentScore}', app.width/2, 100, size = 50, bold = True, font = 'Peace Sans')
 
 def getCell(app, mouseX, mouseY):
     border = 40 # less than drawBoard border to make it easier to drag diagonally
@@ -129,24 +125,24 @@ def searchBoard(board, word):
 def drawHint(app):
     if app.hintGreen:
         if app.hintsRemaining > 1:
-            drawLabel(f'Good! {app.hintsRemaining} hints left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True)
+            drawLabel(f'Good! {app.hintsRemaining} hints left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True, font = 'Peace Sans')
         elif app.hintsRemaining == 1:
-            drawLabel(f'Good! {app.hintsRemaining} hint left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True)
+            drawLabel(f'Good! {app.hintsRemaining} hint left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True, font = 'Peace Sans')
         else:
-            drawLabel(f'Good! Out of hints.', 409, 830, align='center', fill='paleGreen', size=25, bold=True)
+            drawLabel(f'Good! Out of hints.', 409, 830, align='center', fill='paleGreen', size=25, bold=True, font = 'Peace Sans')
             
     elif app.hintsRemaining == 0 and not app.hint:
-        drawLabel('Out of hints.', 409, 830, align='center', fill='white', size=40, bold=True)
+        drawLabel('Out of hints.', 409, 830, align='center', fill='white', size=40, bold=True, font = 'Peace Sans')
 
     elif app.hint:
         hintLabel = app.hint[:app.letters] + "_ " * (len(app.hint) - app.letters)
-        drawLabel(hintLabel, 410, 831, align = 'center', size = 30, fill = 'white')
+        drawLabel(hintLabel, 410, 831, align = 'center', size = 30, fill = 'white', font = 'Peace Sans')
 
     # elif app.hintsRemaining >= 0:
     #     drawLabel('Press h for hint.', 409, 830, align = 'center', fill = 'white', size = 40)
 
     else:
-        drawLabel('Press h for hint.', 409, 830, align = 'center', size = 40, fill = 'white')
+        drawLabel('Press h for hint.', 409, 830, align = 'center', size = 40, fill = 'white', font = 'Peace Sans')
 
 
 

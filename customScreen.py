@@ -5,5 +5,5 @@ def drawCustomScreen(app):
 
     # input box
     drawRect(app.width / 2 - 150, app.height / 2 - 30, 300, 60, fill="white", border="black")
-    drawLabel(app.customSize, app.width / 2, app.height / 2, size=30)
+    drawLabel(app.customSize, app.width / 2, app.height / 2, size=30, font = 'Peace Sans')
 

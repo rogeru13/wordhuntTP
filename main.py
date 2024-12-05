@@ -10,6 +10,7 @@ from drawNameInput import *
 from customScreen import *
 from exitScreen import *
 import random
+import csv # Michael said I could use any external modules I want
 
 def loadWordSet(filePath): # github citation https://github.com/dwyl/english-words/blob/master/read_english_dictionary.py (loading in a dictionary file) 
     wordSet = set()
@@ -20,8 +21,17 @@ def loadWordSet(filePath): # github citation https://github.com/dwyl/english-wor
                 wordSet.add(word.upper())  # makes all of them uppercase
     return wordSet
 
-def loadPlayerData():
-    pass
+
+def loadPlayerData(filePath):
+    nameDict = {}
+    with open(filePath, 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            name = row[0]
+            score = int(row[1])
+            boardLen = int(row[2])
+            nameDict[name] = (score, boardLen)
+    return nameDict
 
 def storeData(app):
     # locally update dictionary
@@ -40,6 +50,7 @@ def onAppStart(app):
     app.userFoundWords = set()
     app.currentScore = 0
     app.game = False
+    app.missingWords = set()
 
     # buttons
     app.homeButtonList = [Button(250, 550, 350, 460, 'nameInput'), Button(250, 550, 495, 585, 'scoreboard'),
@@ -63,7 +74,8 @@ def onAppStart(app):
 
     # player name input
     app.playerName = ''
-    app.nameDict = {}
+    app.nameDict = loadPlayerData('playerData.csv')
+    print(app.nameDict)
     app.maxNameLength = 8
 
     # sizes
@@ -97,6 +109,17 @@ def onAppStart(app):
     app.mediumHigher = 100
     app.hardLower = 5
     app.hardHigher = 50
+
+    app.missingWordsList = []
+    app.miniBoardActive = False
+    app.stepCounter = 0
+    app.miniWordIndex = 0  # Track which word is being animated
+    app.miniLineProgress = 0  # Track line progress for animation
+    # app.foundWordPaths = {}  # Store paths for user-found words
+
+    # for word in app.userFoundWords:
+    #     app.foundWordPaths[word] = getWordPath(app.board, word)
+
 # ------------------------------------------------------- SIZE ADJUSTMENT -------------------------------------------------------- #
 
 def updateBoardPosition(app):
@@ -150,9 +173,12 @@ def onMousePress(app, mouseX, mouseY):
         #     app.screen = 'customSize'
 
     elif app.screen == 'gameEndScreen':
+
         if app.homeButton.isClicked(mouseX, mouseY):
             app.screen = app.homeButton.targetScreen
-
+            app.miniBoardActive = False
+            app.miniWordIndex = 0
+            app.miniLineProgress = 0
         # if 216 <= mouseX <= 596 and 678 <= mouseY <= 816:
         #     app.screen = 'home'
 
@@ -223,7 +249,7 @@ def onMouseDrag(app, mouseX, mouseY):
     leftScrollX = leftBoxX + boxWidth - 10
     scrollbarWidth = 10
 
-    # help from Elena Li (TA) and Austin 
+    # help from Elena/Austin 
 
     # if the mouse in right scrollbar
     if rightScrollX <= mouseX <= rightScrollX + scrollbarWidth and boxY <= mouseY <= boxY + boxHeight:
@@ -322,7 +348,7 @@ def onKeyPress(app, key):
         elif key == 'backspace':
             app.customSize = app.customSize[:-1]
         elif app.customSize == '':
-            if key.isdigit():
+            if key.isdigit() and 2 <= int(key) <= 8:
                 app.customSize += key
 
 # timer functions, resets when hits 0
@@ -349,32 +375,66 @@ def onStep(app):
             app.timer = 0
             app.timerOn = False
             app.game = False
-            app.nameDict[app.playerName] = (app.currentScore, app.boardLen)
+            app.nameDict[app.playerName] = (app.currentScore, app.boardLen) # check highest score
             app.screen = 'gameEndScreen'
             app.playerName = ''
             app.hint = ''
             app.hintsRemaining = 3
             app.letters = 0
             app.custom = False
+            app.missingWords = app.boardWords - app.userFoundWords
+            app.missingWordsList = list(app.missingWords)
+            savePlayerData('playerData.csv', app.nameDict)
+            app.miniBoardActive = True
             print(app.nameDict)
-        
-def appReset(app):
-    app.screen = 'board'
-    app.game = True
-    app.timerOn = True
-    app.timer = 60
-    app.hintsRemaining = 3
-    app.currentScore = 0
-    app.scrollOffsetRight = 0  
-    app.scrollOffsetLeft = 0 
-    app.currentWord = ''
-    app.selectedCells= []
-    app.userFoundWords = set()
-    app.board, app.boardWords = generateValidBoard(app.wordSet)
-    app.hint = ''
-    app.letters = 0
-    
 
+    if app.screen == 'gameEndScreen' and app.miniBoardActive:
+        app.stepCounter += 1  # Increment step counter
+        if app.stepCounter % 5 == 0:  # Slow down the animation
+            if app.miniWordIndex < len(app.missingWords):
+                word = app.missingWordsList[app.miniWordIndex]
+                path = getWordPath(app.board, word)
+
+                # Animate the red line through the word's path
+                if path and app.miniLineProgress < len(path) - 1:
+                    app.miniLineProgress += 1
+                else:
+                    # Move to the next missed word
+                    app.miniWordIndex += 1
+                    app.miniLineProgress = 0
+                    
+# def updateMissedWords(app):
+#     # Filter missed words to include only those with length 3 or more
+#     app.missedWords = [word for word in app.boardWords if word not in app.userFoundWords and len(word) >= 3]
+#     app.miniBoardActive = True
+
+
+def savePlayerData(filePath, nameDict):
+    with open(filePath, 'w', newline='') as file:
+        writer = csv.writer(file)
+        for name, (score, boardLen) in nameDict.items():
+            writer.writerow([name, score, boardLen])
+
+
+
+
+
+
+# def appReset(app):
+#     app.screen = 'board'
+#     app.game = True
+#     app.timerOn = True
+#     app.timer = 60
+#     app.hintsRemaining = 3
+#     app.currentScore = 0
+#     app.scrollOffsetRight = 0  
+#     app.scrollOffsetLeft = 0 
+#     app.currentWord = ''
+#     app.selectedCells= []
+#     app.userFoundWords = set()
+#     app.board, app.boardWords = generateValidBoard(app.wordSet)
+#     app.hint = ''
+#     app.letters = 0
 
 def main():
     runApp()
