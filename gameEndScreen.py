@@ -4,8 +4,7 @@ from cmu_graphics import *
 def drawGameEndScreen(app):
     # background and text
     drawImage('images/endGameScreen.png', app.width / 2, app.height / 2, align='center') # loaded full image instead of separate pngs for efficiency purposes
-    if app.miniBoardActive:
-        drawMiniBoard(app)
+    drawMiniBoard(app)
     
     # rect bounds
     leftBoxX = 50
@@ -45,7 +44,7 @@ def drawGameEndScreen(app):
 
     # draw actual scrollbar
     drawScrollBar(app, leftBoxX + boxWidth - 10, boxY, boxHeight, len(app.userFoundWords), app.scrollOffsetLeft)
-    drawScrollBar(app, rightBoxX + boxWidth - 10, boxY, boxHeight, len(app.boardWords), app.scrollOffsetRight)
+    drawScrollBar(app, rightBoxX + boxWidth - 10, boxY, boxHeight, len(app.missingWords), app.scrollOffsetRight)
 
 # Help from Elena Li (TA) and Austin 
 def drawScrollBar(app, x, y, height, totalItems, scrollOffset):
@@ -148,14 +147,24 @@ def drawScrollBar(app, x, y, height, totalItems, scrollOffset):
 
 def drawMiniBoard(app):
     miniBoardSize = 275
-    border = 12 - app.boardLen  # adjust border for smaller cells
-    cellSize = (miniBoardSize - (app.boardLen + 1) * border) / app.boardLen
+    miniBorder = 12 - app.boardLen  # adjust border for smaller cells
+    miniCellSize = (miniBoardSize - (app.boardLen + 1) * miniBorder) / app.boardLen
 
-    boardLeft = 50
-    boardTop = app.height - miniBoardSize - 20 
+    miniLeft = 50
+    miniTop = app.height - miniBoardSize - 20 
 
     # draw black background for mini-board
-    drawRect(boardLeft, boardTop, miniBoardSize, miniBoardSize, fill='black')
+    drawRect(miniLeft, miniTop, miniBoardSize, miniBoardSize, fill='black')
+
+    for row in range(app.boardLen):
+        for col in range(app.boardLen):
+            x0 = miniLeft + col * (miniCellSize + miniBorder) + miniBorder
+            y0 = miniTop + row * (miniCellSize + miniBorder) + miniBorder
+            drawImage("images/cell.png", x0, y0, width=miniCellSize, height=miniCellSize)
+
+            # Draw letters
+            drawLabel(app.board[row][col], x0 + miniCellSize / 2, y0 + miniCellSize / 2,
+                      size=15, bold=True, font="Helvetica")
 
     # iterates through every word
     if app.miniWordIndex < len(app.missingWords):
@@ -167,34 +176,34 @@ def drawMiniBoard(app):
             if i < len(path):
                 row, col = path[i]
                 # specific cell coordinates for the path
-                x0 = boardLeft + col * (cellSize + border) + border
-                y0 = boardTop + row * (cellSize + border) + border
-                x1 = x0 + cellSize
-                y1 = y0 + cellSize
+                x0 = miniLeft + col * (miniCellSize + miniBorder) + miniBorder
+                y0 = miniTop + row * (miniCellSize + miniBorder) + miniBorder
+                x1 = x0 + miniCellSize
+                y1 = y0 + miniCellSize
 
                 # draw highlighted cell 
-                drawImage("images/cellCorrect.png", x0, y0, width=cellSize, height=cellSize)
+                drawImage("images/cellCorrect.png", x0, y0, width=miniCellSize, height=miniCellSize)
                 drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=12, bold=True, font='Helvetica')
 
         # draw remaining cells normally
         for row in range(app.boardLen):
             for col in range(app.boardLen):
                 if (row, col) not in path[:app.miniLine + 1]:
-                    x0 = boardLeft + col * (cellSize + border) + border
-                    y0 = boardTop + row * (cellSize + border) + border
-                    x1 = x0 + cellSize
-                    y1 = y0 + cellSize
-                    drawImage("images/cell.png", x0, y0, width=cellSize, height=cellSize)
+                    x0 = miniLeft + col * (miniCellSize + miniBorder) + miniBorder
+                    y0 = miniTop + row * (miniCellSize + miniBorder) + miniBorder
+                    x1 = x0 + miniCellSize
+                    y1 = y0 + miniCellSize
+                    drawImage("images/cell.png", x0, y0, width=miniCellSize, height=miniCellSize)
                     drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=12, bold=True, font='Helvetica')
 
     # draw the missing word label
     if app.miniWordIndex < len(app.missingWords):
-        drawLabel(f'Missing: {word}', boardLeft + miniBoardSize / 2, boardTop - 15,
+        drawLabel(f'Missing: {word}', miniLeft + miniBoardSize / 2, miniTop - 15,
                   size=18, bold=True, align='center', fill='black', font='Peace Sans')
 
         word = app.missingWordsList[app.miniWordIndex]
         path = getWordPath(app.board, word)
-        drawLabel(f'Missing: {word}', boardLeft + miniBoardSize/2, boardTop - 15,
+        drawLabel(f'Missing: {word}', miniLeft + miniBoardSize/2, miniTop - 15,
                   size=18, bold=True, align='center', fill='black', font = 'Peace Sans')
         
         # animate the red line along the full path
@@ -204,10 +213,10 @@ def drawMiniBoard(app):
                 row2, col2 = path[i + 1]
 
                 # calculate cell centers for red line
-                x1 = boardLeft + col1 * (cellSize + border) + border + cellSize / 2
-                y1 = boardTop + row1 * (cellSize + border) + border + cellSize / 2
-                x2 = boardLeft + col2 * (cellSize + border) + border + cellSize / 2
-                y2 = boardTop + row2 * (cellSize + border) + border + cellSize / 2
+                x1 = miniLeft + col1 * (miniCellSize + miniBorder) + miniBorder + miniCellSize / 2
+                y1 = miniTop + row1 * (miniCellSize + miniBorder) + miniBorder + miniCellSize / 2
+                x2 = miniLeft + col2 * (miniCellSize + miniBorder) + miniBorder + miniCellSize / 2
+                y2 = miniTop + row2 * (miniCellSize + miniBorder) + miniBorder + miniCellSize / 2
 
                 drawLine(x1, y1, x2, y2, fill='red', lineWidth=2)
 
@@ -233,6 +242,7 @@ def isValidCell(board, row, col, seen):
 #             ):
 #                 stack.append((newRow, newCol, currWord[1:], path + [(newRow, newCol)]))
 #     return None
+
 def searchPath(board, word, row, col, path, seen, directions):
     if not word:  # All letters matched
         return path

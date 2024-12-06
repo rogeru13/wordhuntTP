@@ -12,16 +12,18 @@ from exitScreen import *
 import random
 import csv # Michael said I could use any external modules I want
 
+
 def loadWordSet(filePath): # github citation https://github.com/dwyl/english-words/blob/master/read_english_dictionary.py (loading in a dictionary file) 
     wordSet = set()
     with open(filePath, 'r') as file:
         for line in file:
             word = line.strip()  # removes any extra spaces just in case
-            if len(word) > 2 and len(word) < 10:  # Skips words that are less than 3 characters
+            if len(word) > 2 and len(word) < 10:  # skips words that are less than 3 characters
                 wordSet.add(word.upper())  # makes all of them uppercase
     return wordSet
 
 
+# learned how to load in player data and use csv from Varun
 def loadPlayerData(filePath):
     nameDict = {}
     with open(filePath, 'r') as file:
@@ -50,6 +52,7 @@ def onAppStart(app):
     # buttons
     app.homeButtonList = [Button(250, 550, 350, 460, 'nameInput'), Button(250, 550, 495, 585, 'scoreboard'),
                       Button(250, 550, 625, 720, 'customSize'), Button(249, 541, 751, 845, 'exitScreen')]
+    
     # home button on endGameScreen
     app.homeButton = Button(496, 758, 709, 791, 'home')
     # back buttons
@@ -108,7 +111,7 @@ def onAppStart(app):
 
     app.missingWordsList = []
     app.miniBoardActive = False
-    app.stepCounter = 0
+    app.miniCounter = 0
     app.miniWordIndex = 0  # word being animated
     app.miniLine = 0  # line progress 
 
@@ -125,7 +128,6 @@ def onResize(app):
 # ---------------------------------------------------------- USER INPUT -------------------------------------------------------- #
 
 def redrawAll(app):
-    # print(f"Current screen: {app.screen}") 
     if app.screen == 'home':
         drawHome(app)
     elif app.screen == 'nameInput':
@@ -134,7 +136,6 @@ def redrawAll(app):
         drawBoard(app)
         drawScore(app)
         drawHint(app)
-
     elif app.screen =='scoreboard':
         drawScoreboard(app)
     elif app.screen == 'gameEndScreen':
@@ -146,16 +147,14 @@ def redrawAll(app):
 
 def onMousePress(app, mouseX, mouseY):
     print(mouseX,mouseY)
-    # pressing the start button
+    # pressing start button
     if app.screen == 'home':
         for Button in app.homeButtonList:
             if Button.isClicked(mouseX, mouseY):
                 app.screen = Button.targetScreen
                 print(app.screen)
-
-
+    # 
     elif app.screen == 'gameEndScreen':
-
         if app.homeButton.isClicked(mouseX, mouseY):
             app.screen = app.homeButton.targetScreen
             app.miniBoardActive = False
@@ -233,7 +232,7 @@ def onMouseDrag(app, mouseX, mouseY):
 
     # if the mouse in right scrollbar
     if rightScrollX <= mouseX <= rightScrollX + scrollbarWidth and boxY <= mouseY <= boxY + boxHeight:
-        totalWordsHeightRight = len(app.boardWords) * app.wordHeight  # total height of all words
+        totalWordsHeightRight = len(app.missingWordsList) * app.wordHeight  # total height of all words
         relativePositionRight = (mouseY - boxY) / boxHeight #
         app.scrollOffsetRight = relativePositionRight * (totalWordsHeightRight - boxHeight)
         app.scrollOffsetRight = max(0, min(app.scrollOffsetRight, totalWordsHeightRight - boxHeight)) # hard sets height if you scroll too much
@@ -293,7 +292,7 @@ def onKeyPress(app, key):
         if key == 'h' and not app.hintGreen:
             if app.hintsRemaining > 0:
                 remainingWords = [word for word in app.boardWords if word not in app.userFoundWords]
-                if app.hintsRemaining > 0 and remainingWords:  # Ensure hints are available and there are words left
+                if app.hintsRemaining > 0 and remainingWords:  # ensure hints are available and there are words left
                     app.hint = random.choice(remainingWords)
                     app.hintsRemaining -= 1
                     app.letters = 0
@@ -352,7 +351,7 @@ def onStep(app):
             app.hintFlashTime -= 1
             if app.hintFlashTime <= 0:
                 app.hintGreen = False
-                app.hint = '' # check to see if '' works too
+                app.hint = '' 
                 app.letters = 0
 
         if app.timer <= 0:
@@ -373,31 +372,27 @@ def onStep(app):
             print(app.nameDict)
 
     if app.screen == 'gameEndScreen' and app.miniBoardActive:
-        app.stepCounter += 1  # Increment step counter
-        if app.stepCounter % 5 == 0:  # Slow down the animation
+        app.miniCounter += 1  # specialized time for the mini board
+        if app.miniCounter % 5 == 0:  # every 5 steps, fast
             if app.miniWordIndex < len(app.missingWords):
                 word = app.missingWordsList[app.miniWordIndex]
                 path = getWordPath(app.board, word)
 
-                # Animate the red line through the word's path
+                # animate the red line
                 if path and app.miniLine < len(path) - 1:
                     app.miniLine += 1
                 else:
-                    # Move to the next missed word
+                    # move to next word
                     app.miniWordIndex += 1
                     app.miniLine = 0
                     
 
+# saves the player data into the csv
 def savePlayerData(filePath, nameDict):
     with open(filePath, 'w', newline='') as file:
         writer = csv.writer(file)
         for name, (score, boardLen) in nameDict.items():
             writer.writerow([name, score, boardLen])
-
-
-
-
-
 
 # def appReset(app):
 #     app.screen = 'board'
