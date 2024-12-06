@@ -33,11 +33,6 @@ def loadPlayerData(filePath):
             nameDict[name] = (score, boardLen)
     return nameDict
 
-def storeData(app):
-    # locally update dictionary
-    pass
-    # add the csv file 
-
 def onAppStart(app):
 
     app.screen = "home"
@@ -55,7 +50,8 @@ def onAppStart(app):
     # buttons
     app.homeButtonList = [Button(250, 550, 350, 460, 'nameInput'), Button(250, 550, 495, 585, 'scoreboard'),
                       Button(250, 550, 625, 720, 'customSize'), Button(249, 541, 751, 845, 'exitScreen')]
-    app.homeButton = Button(216, 596, 678, 816, 'home')
+    # home button on endGameScreen
+    app.homeButton = Button(496, 758, 709, 791, 'home')
     # back buttons
     app.backButton = Button(594, 778, 838, 900, 'home')
     app.backButtonInput = Button(27, 215, 22, 82, 'home')
@@ -113,12 +109,8 @@ def onAppStart(app):
     app.missingWordsList = []
     app.miniBoardActive = False
     app.stepCounter = 0
-    app.miniWordIndex = 0  # Track which word is being animated
-    app.miniLineProgress = 0  # Track line progress for animation
-    # app.foundWordPaths = {}  # Store paths for user-found words
-
-    # for word in app.userFoundWords:
-    #     app.foundWordPaths[word] = getWordPath(app.board, word)
+    app.miniWordIndex = 0  # word being animated
+    app.miniLine = 0  # line progress 
 
 # ------------------------------------------------------- SIZE ADJUSTMENT -------------------------------------------------------- #
 
@@ -159,18 +151,8 @@ def onMousePress(app, mouseX, mouseY):
         for Button in app.homeButtonList:
             if Button.isClicked(mouseX, mouseY):
                 app.screen = Button.targetScreen
-                # if app.screen == 'customSize':
-                #     app.custom = True
-                # else:
-                #     app.custom = False
                 print(app.screen)
 
-        # if 250 <= mouseX <= 550 and 350 <= mouseY <= 460 and app.screen:
-        #     app.screen = 'nameInput'
-        # elif 250 <= mouseX <= 550 and 495 <= mouseY <= 585:
-        #     app.screen = 'scoreboard'
-        # elif 250 <= mouseX <= 550: and 314 <= mouse Y <= 457:
-        #     app.screen = 'customSize'
 
     elif app.screen == 'gameEndScreen':
 
@@ -178,9 +160,7 @@ def onMousePress(app, mouseX, mouseY):
             app.screen = app.homeButton.targetScreen
             app.miniBoardActive = False
             app.miniWordIndex = 0
-            app.miniLineProgress = 0
-        # if 216 <= mouseX <= 596 and 678 <= mouseY <= 816:
-        #     app.screen = 'home'
+            app.miniLine = 0
 
     elif app.screen == 'scoreboard':
         if app.backButton.isClicked(mouseX, mouseY):
@@ -313,9 +293,13 @@ def onKeyPress(app, key):
         if key == 'h' and not app.hintGreen:
             if app.hintsRemaining > 0:
                 remainingWords = [word for word in app.boardWords if word not in app.userFoundWords]
-                app.hint = random.choice(remainingWords) # CITE THIS BOI
-                app.hintsRemaining -=1 
-                app.letters = 0
+                if app.hintsRemaining > 0 and remainingWords:  # Ensure hints are available and there are words left
+                    app.hint = random.choice(remainingWords)
+                    app.hintsRemaining -= 1
+                    app.letters = 0
+                # app.hint = random.choice(remainingWords) # CITE THIS BOI
+                # app.hintsRemaining -=1 
+                # app.letters = 0
             else:
                 app.hint = ''
                 
@@ -396,18 +380,13 @@ def onStep(app):
                 path = getWordPath(app.board, word)
 
                 # Animate the red line through the word's path
-                if path and app.miniLineProgress < len(path) - 1:
-                    app.miniLineProgress += 1
+                if path and app.miniLine < len(path) - 1:
+                    app.miniLine += 1
                 else:
                     # Move to the next missed word
                     app.miniWordIndex += 1
-                    app.miniLineProgress = 0
+                    app.miniLine = 0
                     
-# def updateMissedWords(app):
-#     # Filter missed words to include only those with length 3 or more
-#     app.missedWords = [word for word in app.boardWords if word not in app.userFoundWords and len(word) >= 3]
-#     app.miniBoardActive = True
-
 
 def savePlayerData(filePath, nameDict):
     with open(filePath, 'w', newline='') as file:

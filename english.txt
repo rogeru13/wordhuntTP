@@ -1135,7 +1135,6 @@ asphyxiation
 aspirations
 aspire
 aspirin
-ass
 aspirins
 assailant
 assassin
@@ -2345,8 +2344,6 @@ bone
 boned
 bonehead
 boneless
-boner
-boners
 bones
 bonfire
 bong
@@ -2360,10 +2357,6 @@ bonus
 bonuses
 bony
 boo
-boob
-boobies
-boobs
-booby
 booger
 boogey
 boogeyman
@@ -4835,7 +4828,6 @@ cooling
 coolly
 coolness
 cools
-coon
 coop
 cooped
 cooper

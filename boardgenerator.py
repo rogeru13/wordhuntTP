@@ -10,6 +10,10 @@ def generateBoard(boardLen):
     return board
 
 def generateValidBoard(legalWords, minWords=80):
+    if app.boardLen == 2:
+        minWords = 5
+    if app.boardLen == 3:
+        minWords = 40
     while True:
         board = generateBoard(app.boardLen)
         valid, foundWords = isLegalBoard(board, legalWords, minWords)
@@ -24,6 +28,7 @@ def drawBoard(app):
     cellCenters = [[None for _ in range(totalCells)] for _ in range(totalCells)] # for the red line
 
     # draws background 
+    # loaded full image instead of separate assets in CMU graphics for efficiency purposes
     drawImage('images/boardbackground.png', app.width/2, app.height/2, align = "center") # designed in figma: https://www.figma.com/design/MdZN6ojTAYLTDaIlLjcJkc/Wordhunt---roger?node-id=0-1&node-type=canvas&t=Hb5hfmV195ld3ymW-0
     
     # draws black board background for border

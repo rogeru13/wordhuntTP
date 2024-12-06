@@ -3,7 +3,7 @@ from cmu_graphics import *
 
 def drawGameEndScreen(app):
     # background and text
-    drawImage('images/endGameScreen.png', app.width / 2, app.height / 2, align='center')
+    drawImage('images/endGameScreen.png', app.width / 2, app.height / 2, align='center') # loaded full image instead of separate pngs for efficiency purposes
     if app.miniBoardActive:
         drawMiniBoard(app)
     
@@ -95,49 +95,113 @@ def drawScrollBar(app, x, y, height, totalItems, scrollOffset):
 #             y2 = miniTop + row2 * (miniCellSize + miniBorder) + miniBorder + miniCellSize / 2
 #             drawLine(x1, y1, x2, y2, fill="red", lineWidth=2)
 
-def drawMiniBoard(app):
-    # Mini board properties
-    miniBoardSize = 250  # Fixed size for the mini-board
-    # cellSize = miniBoardSize / app.boardLen
-    border = 12 - app.boardLen  # Adjust border for smaller cells
-    cellSize = (miniBoardSize - (app.boardLen + 1) * border) / app.boardLen    # Bottom-left position
+# def drawMiniBoard(app):
+#     # Mini board properties
+#     miniBoardSize = 275  # Fixed size for the mini-board
+#     # cellSize = miniBoardSize / app.boardLen
+#     border = 12 - app.boardLen  # Adjust border for smaller cells
+#     cellSize = (miniBoardSize - (app.boardLen + 1) * border) / app.boardLen    # Bottom-left position
 
-    boardLeft = 50
-    boardTop = app.height - miniBoardSize - 50  # Slight padding from bottom
+#     boardLeft = 50
+#     boardTop = app.height - miniBoardSize - 20  # Slight padding from bottom
 
-    # Draw black background for mini-board
-    drawRect(boardLeft, boardTop, miniBoardSize, miniBoardSize, fill='black')
+#     # Draw black background for mini-board
+#     drawRect(boardLeft, boardTop, miniBoardSize, miniBoardSize, fill='black')
 
-    # Draw the cells
+#     # Draw the cells
     
-    for row in range(app.boardLen):
-        for col in range(app.boardLen):
-            # Calculate cell coordinates
-            x0 = boardLeft + col * (cellSize + border) + border
-            y0 = boardTop + row * (cellSize + border) + border
-            x1 = x0 + cellSize
-            y1 = y0 + cellSize
+#     for row in range(app.boardLen):
+#         for col in range(app.boardLen):
+#             # Calculate cell coordinates
+#             x0 = boardLeft + col * (cellSize + border) + border
+#             y0 = boardTop + row * (cellSize + border) + border
+#             x1 = x0 + cellSize
+#             y1 = y0 + cellSize
 
-            # Draw cell background using the same images as the original board
-            drawImage("images/cell.png", x0, y0, width=cellSize, height=cellSize)
+#             # Draw cell background using the same images as the original board
+            
+#             drawImage("images/cell.png", x0, y0, width=cellSize, height=cellSize)
 
-            # Draw letter in the cell
-            drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=12, bold=True, font='Helvetica')
+#             # Draw letter in the cell
+#             drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=12, bold=True, font='Helvetica')
 
     # Draw red line for missed words animation
+    # if app.miniWordIndex < len(app.missingWords):
+    #     word = app.missingWordsList[app.miniWordIndex]
+    #     path = getWordPath(app.board, word)
+    #     drawLabel(f'Missing: {word}', boardLeft + miniBoardSize/2, boardTop - 15,
+    #               size=18, bold=True, align='center', fill='black', font = 'Peace Sans')
+        
+    #     # Animate the red line along the full path
+    #     if app.miniLineProgress < len(path):
+    #         for i in range(app.miniLineProgress):
+    #             row1, col1 = path[i]
+    #             row2, col2 = path[i + 1]
+
+    #             # calculate cell centers for red line
+    #             x1 = boardLeft + col1 * (cellSize + border) + border + cellSize / 2
+    #             y1 = boardTop + row1 * (cellSize + border) + border + cellSize / 2
+    #             x2 = boardLeft + col2 * (cellSize + border) + border + cellSize / 2
+    #             y2 = boardTop + row2 * (cellSize + border) + border + cellSize / 2
+
+    #             drawLine(x1, y1, x2, y2, fill='red', lineWidth=2)
+
+def drawMiniBoard(app):
+    miniBoardSize = 275
+    border = 12 - app.boardLen  # adjust border for smaller cells
+    cellSize = (miniBoardSize - (app.boardLen + 1) * border) / app.boardLen
+
+    boardLeft = 50
+    boardTop = app.height - miniBoardSize - 20 
+
+    # draw black background for mini-board
+    drawRect(boardLeft, boardTop, miniBoardSize, miniBoardSize, fill='black')
+
+    # iterates through every word
     if app.miniWordIndex < len(app.missingWords):
         word = app.missingWordsList[app.miniWordIndex]
         path = getWordPath(app.board, word)
-        drawLabel(f"Word: {word}", boardLeft + miniBoardSize + 30, boardTop + miniBoardSize / 2,
-                  size=15, bold=True, align="left", fill="black", font = 'Peace Sans')
+
+        # draw cells depending green along with red line
+        for i in range(app.miniLine + 1):
+            if i < len(path):
+                row, col = path[i]
+                # specific cell coordinates for the path
+                x0 = boardLeft + col * (cellSize + border) + border
+                y0 = boardTop + row * (cellSize + border) + border
+                x1 = x0 + cellSize
+                y1 = y0 + cellSize
+
+                # draw highlighted cell 
+                drawImage("images/cellCorrect.png", x0, y0, width=cellSize, height=cellSize)
+                drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=12, bold=True, font='Helvetica')
+
+        # draw remaining cells normally
+        for row in range(app.boardLen):
+            for col in range(app.boardLen):
+                if (row, col) not in path[:app.miniLine + 1]:
+                    x0 = boardLeft + col * (cellSize + border) + border
+                    y0 = boardTop + row * (cellSize + border) + border
+                    x1 = x0 + cellSize
+                    y1 = y0 + cellSize
+                    drawImage("images/cell.png", x0, y0, width=cellSize, height=cellSize)
+                    drawLabel(app.board[row][col], (x0 + x1) / 2, (y0 + y1) / 2, size=12, bold=True, font='Helvetica')
+
+    # draw the missing word label
+    if app.miniWordIndex < len(app.missingWords):
+        drawLabel(f'Missing: {word}', boardLeft + miniBoardSize / 2, boardTop - 15,
+                  size=18, bold=True, align='center', fill='black', font='Peace Sans')
+
+        word = app.missingWordsList[app.miniWordIndex]
+        path = getWordPath(app.board, word)
+        drawLabel(f'Missing: {word}', boardLeft + miniBoardSize/2, boardTop - 15,
+                  size=18, bold=True, align='center', fill='black', font = 'Peace Sans')
         
-        # Animate the red line along the full path
-        if app.miniLineProgress < len(path):
-            for i in range(app.miniLineProgress):
+        # animate the red line along the full path
+        if app.miniLine < len(path):
+            for i in range(app.miniLine):
                 row1, col1 = path[i]
                 row2, col2 = path[i + 1]
-                
-
 
                 # calculate cell centers for red line
                 x1 = boardLeft + col1 * (cellSize + border) + border + cellSize / 2
@@ -198,6 +262,7 @@ def searchPath(board, word, row, col, path, seen, directions):
 #                 if path:
 #                     # print(f"Word: {word}, Path: {path}")
 #                     return path
+
 def getWordPath(board, word):
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
     for row in range(len(board)):
