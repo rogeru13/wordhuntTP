@@ -1,5 +1,18 @@
-# Roger You
-# 15112 F
+# --------------------------------------------------------------------------------------------------------------------------------
+# BETTER WORD HUNT
+# --------------------------------------------------------------------------------------------------------------------------------
+# Description: 
+# This program is a word connection game where users must find English words on a randomly generated board. 
+# There are a variety of different features for the user to experiment with, including the scoring system,  
+# the customizable board, a hint button, a functional scrollbar, and an animated backtracking tutorial board.
+#
+# 
+# Author: Roger You
+# Language: Python 3
+# External Libraries:     
+#     - cmu_graphics ( visuals)
+#     - csv (reading scoreboard)
+#     - random (random selection of words)
 
 from cmu_graphics import *
 from boardGenerator import *
@@ -10,7 +23,7 @@ from drawNameInput import *
 from customScreen import *
 from exitScreen import *
 import random
-import csv # Michael said I could use any external modules I want
+import csv # Michael (TP Mentor) said I could use any external modules needed
 
 
 def loadWordSet(filePath): # github citation https://github.com/dwyl/english-words/blob/master/read_english_dictionary.py (loading in a dictionary file) 
@@ -23,11 +36,11 @@ def loadWordSet(filePath): # github citation https://github.com/dwyl/english-wor
     return wordSet
 
 
-# learned how to load in player data and use csv from Varun
+# learned how to utilize csv from Varun
 def loadPlayerData(filePath):
     nameDict = {}
-    with open(filePath, 'r') as file:
-        reader = csv.reader(file)
+    with open(filePath, 'r') as file: 
+        reader = csv.reader(file) # csv specific
         for row in reader:
             name = row[0]
             score = int(row[1])
@@ -39,9 +52,8 @@ def onAppStart(app):
 
     app.screen = "home"
 
-    #USER ADJUSTABLE
+    # board properties
     app.boardLen = 4
-    app.minWords = 3
     app.selectedCells= []
     app.currentWord = ''
     app.userFoundWords = set()
@@ -62,7 +74,7 @@ def onAppStart(app):
     app.stayButton = Button(303, 519, 367, 432, 'home')
     app.exitButton = Button(303, 519, 462, 534, 'end')
 
-    # timer
+    # timer variables
     app.timer = 60
     app.timerOn = False
     app.stepsPerSecond = 15
@@ -74,22 +86,21 @@ def onAppStart(app):
     # player name input
     app.playerName = ''
     app.nameDict = loadPlayerData('playerData.csv')
-    print(app.nameDict)
     app.maxNameLength = 8
 
     # sizes
     app.cellSize = 145
     app.width = 804 # size of image from figma (self-designed) https://www.figma.com/design/MdZN6ojTAYLTDaIlLjcJkc/Wordhunt---roger?node-id=1-4&node-type=frame&t=1ri7PKyCdNK3MigY-0
     app.height = 943 
-    app.boardLeft = app.width/2 - app.cellSize*2
-    app.boardTop = app.height/2 - app.cellSize*2 + 100
+    app.boardLeft = app.width/2 - app.cellSize*2 
+    app.boardTop = app.height/2 - app.cellSize*2
 
-    # scroll
+    # scroll variables
     app.scrollOffsetRight = 0
     app.scrollOffsetLeft = 0
     app.wordHeight = 30  # word spacing
 
-    # hint
+    # hint variables
     app.hint = ''
     app.hintsRemaining = 3
     app.letters = 0
@@ -100,22 +111,12 @@ def onAppStart(app):
     app.custom = False
     app.customSize = ''
 
-    # difficulties
-    app.mode = ''
-    app.easyLower = 100
-    app.easyHigher = 200
-    app.mediumLower = 50
-    app.mediumHigher = 100
-    app.hardLower = 5
-    app.hardHigher = 50
-
+    # backtracking solution board 
     app.missingWordsList = []
     app.miniBoardActive = False
     app.miniCounter = 0
     app.miniWordIndex = 0  # word being animated
     app.miniLine = 0  # line progress 
-
-# ------------------------------------------------------- SIZE ADJUSTMENT -------------------------------------------------------- #
 
 def updateBoardPosition(app):
     # in case of resize 
@@ -125,8 +126,18 @@ def updateBoardPosition(app):
 def onResize(app):
     updateBoardPosition(app)
 
-# ---------------------------------------------------------- USER INPUT -------------------------------------------------------- #
+# size adjustment
+def updateBoardPosition(app):
+    # in case of resize 
+    app.boardLeft = app.width / 2 - (app.cellSize * 2)
+    app.boardTop = app.height / 2 - (app.cellSize * 2)
+    
+def onResize(app):
+    updateBoardPosition(app)
 
+# ---------------------------------------------------------- GAME -------------------------------------------------------- #
+
+# draws full screens
 def redrawAll(app):
     if app.screen == 'home':
         drawHome(app)
@@ -146,42 +157,34 @@ def redrawAll(app):
         drawExitScreen(app)  
 
 def onMousePress(app, mouseX, mouseY):
-    print(mouseX,mouseY)
-    # pressing start button
     if app.screen == 'home':
         for Button in app.homeButtonList:
             if Button.isClicked(mouseX, mouseY):
                 app.screen = Button.targetScreen
-                print(app.screen)
-    # 
+    # pressing home button on end game screen
     elif app.screen == 'gameEndScreen':
         if app.homeButton.isClicked(mouseX, mouseY):
+            # deactivate backtracking board
             app.screen = app.homeButton.targetScreen
             app.miniBoardActive = False
             app.miniWordIndex = 0
             app.miniLine = 0
-
     elif app.screen == 'scoreboard':
-        if app.backButton.isClicked(mouseX, mouseY):
-            
+        if app.backButton.isClicked(mouseX, mouseY):    
             app.screen = 'home'
-    
     elif app.screen == 'nameInput':
         if app.backButtonInput.isClicked(mouseX, mouseY):
             app.screen = 'home'
-    
     elif app.screen == 'customSize':
         if app.backButtonInput.isClicked(mouseX, mouseY):
             app.screen = 'home'
-
     elif app.screen == 'exitScreen':
         if app.stayButton.isClicked(mouseX, mouseY):
-            print("Exit button clicked!")
             app.screen = 'home'
         elif app.exitButton.isClicked(mouseX, mouseY):
             exit()
 
-    # reset the selected cells and word
+    # reset the selected cells and word if clicked
     if app.game:
         app.currentWord = ''
         app.selectedCells = []
@@ -194,13 +197,13 @@ def onMousePress(app, mouseX, mouseY):
 
 def onMouseDrag(app, mouseX, mouseY):
     if app.game:
-        # grabs row and col of cell
+        # gets row and col of cell
         cell = getCell(app, mouseX, mouseY) 
         if len(app.selectedCells) >= 1:
-            # Get the last selected cell
+            # gets last selected cell
             lastRow, lastCol = app.selectedCells[-1]
+
         # checking if the mouse is on an actual cell
-        
         if cell is not None:
             # if the cell is in selectedCells
             if len(app.selectedCells) > 1 and cell == app.selectedCells[-2]:
@@ -251,9 +254,6 @@ def onMouseRelease(app, mouseX, mouseY):
         if ((app.currentWord in app.wordSet) and (app.currentWord not in app.userFoundWords)):
             app.userFoundWords.add(app.currentWord)
             app.currentScore += len(app.currentWord) * 100
-            print(f"Word found: {app.currentWord} | Score: {app.currentScore}")
-        else:
-            print(f"Invalid word: {app.currentWord}")
         # resets selections
         app.selectedCells = []
         app.currentWord = ''
@@ -268,23 +268,10 @@ def onKeyPress(app, key):
                 # game starts and board is created and reset
                 if not app.custom:
                     app.boardLen = 4
-                app.screen = 'board'
-                app.game = True
-                app.timerOn = True
-                app.timer = 60
-                app.hintsRemaining = 3
-                app.currentScore = 0
-                app.scrollOffsetRight = 0  
-                app.scrollOffsetLeft = 0 
-                app.currentWord = ''
-                app.selectedCells= []
-                app.userFoundWords = set()
-                app.board, app.boardWords = generateValidBoard(app.wordSet)
-                app.hint = ''
-                app.letters = 0
+                appNewGame(app) 
         elif key == 'backspace':
-            app.playerName = app.playerName[:-1]
-        elif len(app.playerName) < app.maxNameLength:
+            app.playerName = app.playerName[:-1] 
+        elif len(app.playerName) < app.maxNameLength: # prevents too long names
             if len(key) == 1 and (key.isalpha()):
                 app.playerName += key
     
@@ -293,15 +280,12 @@ def onKeyPress(app, key):
             if app.hintsRemaining > 0:
                 remainingWords = [word for word in app.boardWords if word not in app.userFoundWords]
                 if app.hintsRemaining > 0 and remainingWords:  # ensure hints are available and there are words left
-                    app.hint = random.choice(remainingWords)
+                    app.hint = random.choice(remainingWords) # learned from w3 schools: https://www.w3schools.com/python/ref_random_choice.asp
                     app.hintsRemaining -= 1
                     app.letters = 0
-                # app.hint = random.choice(remainingWords) # CITE THIS BOI
-                # app.hintsRemaining -=1 
-                # app.letters = 0
             else:
                 app.hint = ''
-                
+        # end game
         elif key == 'e':
             app.timer = 1
 
@@ -310,24 +294,10 @@ def onKeyPress(app, key):
             if len(app.customSize) > 0:  # ensures the input is not empty
                 if app.customSize.isdigit() and 2 <= int(app.customSize) <= 8:
                     # game starts and board is created and reset
-                    # KEY CHANGE
                     app.boardLen = int(app.customSize)
                     app.customSize = ''
                     app.custom = True
                     app.screen = 'nameInput'
-                    # app.game = True
-                    # app.timerOn = True
-                    # app.timer = 60
-                    # app.hintsRemaining = 3
-                    # app.currentScore = 0
-                    # app.scrollOffsetRight = 0  
-                    # app.scrollOffsetLeft = 0 
-                    # app.currentWord = ''
-                    # app.selectedCells= []
-                    # app.userFoundWords = set()
-                    # app.board, app.boardWords = generateValidBoard(app.wordSet)
-                    # app.hint = ''
-                    # app.letters = 0
         elif key == 'backspace':
             app.customSize = app.customSize[:-1]
         elif app.customSize == '':
@@ -340,13 +310,15 @@ def onStep(app):
         app.timer -= 1/app.stepsPerSecond
 
         # check if enough time has passed to reveal another letter in the hint
-        if app.hint and app.timer % 3 < (1 / app.stepsPerSecond) and not app.hintGreen:  # every 3 seconds
+        if app.hint and app.timer % 3 < (1 / app.stepsPerSecond) and not app.hintGreen: # every 3 seconds
             app.letters = min(app.letters + 1, len(app.hint))  # increment revealed letters, capped at the hint length
 
+        # if they get the hint that was on the board
         if app.hint != '' and app.hint in app.userFoundWords and not app.hintGreen:
             app.hintGreen = True
             app.hintFlashTime = 20
         
+        # flashes message to user after getting hint
         if app.hintGreen:
             app.hintFlashTime -= 1
             if app.hintFlashTime <= 0:
@@ -355,26 +327,13 @@ def onStep(app):
                 app.letters = 0
 
         if app.timer <= 0:
-            app.timer = 0
-            app.timerOn = False
-            app.game = False
-            app.nameDict[app.playerName] = (app.currentScore, app.boardLen) # check highest score
-            app.screen = 'gameEndScreen'
-            app.playerName = ''
-            app.hint = ''
-            app.hintsRemaining = 3
-            app.letters = 0
-            app.custom = False
-            app.missingWords = app.boardWords - app.userFoundWords
-            app.missingWordsList = list(app.missingWords)
-            savePlayerData('playerData.csv', app.nameDict)
-            app.miniBoardActive = True
-            print(app.nameDict)
+            appEndGame(app)
 
+    # animation for backtracking board
     if app.screen == 'gameEndScreen' and app.miniBoardActive:
         app.miniCounter += 1  # specialized time for the mini board
         if app.miniCounter % 5 == 0:  # every 5 steps, fast
-            if app.miniWordIndex < len(app.missingWords):
+            if app.miniWordIndex < len(app.missingWords): # draws red lines depending on length of word
                 word = app.missingWordsList[app.miniWordIndex]
                 path = getWordPath(app.board, word)
 
@@ -386,7 +345,6 @@ def onStep(app):
                     app.miniWordIndex += 1
                     app.miniLine = 0
                     
-
 # saves the player data into the csv
 def savePlayerData(filePath, nameDict):
     with open(filePath, 'w', newline='') as file:
@@ -394,21 +352,39 @@ def savePlayerData(filePath, nameDict):
         for name, (score, boardLen) in nameDict.items():
             writer.writerow([name, score, boardLen])
 
-# def appReset(app):
-#     app.screen = 'board'
-#     app.game = True
-#     app.timerOn = True
-#     app.timer = 60
-#     app.hintsRemaining = 3
-#     app.currentScore = 0
-#     app.scrollOffsetRight = 0  
-#     app.scrollOffsetLeft = 0 
-#     app.currentWord = ''
-#     app.selectedCells= []
-#     app.userFoundWords = set()
-#     app.board, app.boardWords = generateValidBoard(app.wordSet)
-#     app.hint = ''
-#     app.letters = 0
+# new game initialization
+def appNewGame(app):
+    app.screen = 'board'
+    app.game = True
+    app.timerOn = True
+    app.timer = 60
+    app.hintsRemaining = 3
+    app.currentScore = 0
+    app.scrollOffsetRight = 0  
+    app.scrollOffsetLeft = 0 
+    app.currentWord = ''
+    app.selectedCells= []
+    app.userFoundWords = set()
+    app.board, app.boardWords = generateValidBoard(app.wordSet)
+    app.hint = ''
+    app.letters = 0
+
+# stops game
+def appEndGame(app):
+    app.timer = 0
+    app.timerOn = False
+    app.game = False
+    app.nameDict[app.playerName] = (app.currentScore, app.boardLen) # check highest score
+    app.screen = 'gameEndScreen'
+    app.playerName = ''
+    app.hint = ''
+    app.letters = 0
+    app.custom = False
+    app.missingWords = app.boardWords - app.userFoundWords
+    app.missingWordsList = list(app.missingWords)
+    savePlayerData('playerData.csv', app.nameDict)
+    app.miniBoardActive = True
+
 
 def main():
     runApp()

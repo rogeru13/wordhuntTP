@@ -2,26 +2,25 @@ from cmu_graphics import *
 import random
 
 
-# BOARD DRAWER
-
+# creates a board and fills it with random letters
 def generateBoard(boardLen):
-    # Creates a board and fills it with random letters
     board = [[random.choice('AAAEEEIIOOTTBCDEFGHIJKLMNOPQRSTUVWXYZ') for row in range(boardLen)] for col in range(boardLen)] # added extra vowels for more common word generation
     return board
 
+# checks if the board is valid
 def generateValidBoard(legalWords, minWords=80):
     if app.boardLen == 2:
         minWords = 5
     if app.boardLen == 3:
-        minWords = 40
+        minWords = 30
     while True:
         board = generateBoard(app.boardLen)
-        valid, foundWords = isLegalBoard(board, legalWords, minWords)
+        valid, foundWords = isLegalBoard(board, legalWords, minWords) # verifies board based on number of words
         if valid:
             return board, foundWords
     
 def drawBoard(app):
-    totalCells = app.boardLen  # boardLen
+    totalCells = app.boardLen  
     totalBorder = 60  
     border = totalBorder / (totalCells + 1)  # thickness
     cellInnerSize = (app.cellSize * 4 - totalBorder) / totalCells 
@@ -37,7 +36,7 @@ def drawBoard(app):
     # drawing full board
     for row in range(totalCells):
         for col in range(totalCells):
-            # calculates board coordinates
+            # board coordinates
             x0 = app.boardLeft + col * (cellInnerSize + border) + border
             y0 = app.boardTop + row * (cellInnerSize + border) + border
             x1 = x0 + cellInnerSize
@@ -94,42 +93,10 @@ def getCell(app, mouseX, mouseY):
     return None
 
 
-# BOARD LETTER CREATOR
-
-def searchFromCell(board, word, row, col, seen):
-    if word == '':
-        return True
-    
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-
-    for drow, dcol in directions:
-        newRow, newCol = row + drow, col + dcol
-        if (0 <= newRow < len(board) and 0 <= newCol < len(board[0]) and
-                (newRow, newCol) not in seen and board[newRow][newCol] == word[0]):
-            if searchFromCell(board, word[1:], newRow, newCol, seen | {(newRow, newCol)}):
-                return True
-    return False
-
-def isLegalBoard(board, legalWords, minWords):
-    foundWords = set()
-
-    for word in legalWords:
-        if searchBoard(board, word):
-            foundWords.add(word)
-    
-    return len(foundWords) >= minWords, foundWords
-
-def searchBoard(board, word):
-    for row in range(len(board)):
-        for col in range(len(board[0])):
-            if board[row][col] == word[0]:  
-                if searchFromCell(board, word[1:], row, col, {(row, col)}):
-                    return True
-    return False
-
+# draws hint based on user inout
 def drawHint(app):
-    if app.hintGreen:
-        if app.hintsRemaining > 1:
+    if app.hintGreen: # notifies user they have completed the hint
+        if app.hintsRemaining > 1: 
             drawLabel(f'Good! {app.hintsRemaining} hints left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True, font = 'Peace Sans')
         elif app.hintsRemaining == 1:
             drawLabel(f'Good! {app.hintsRemaining} hint left!', 409, 830, align='center', fill='paleGreen', size=25, bold=True, font = 'Peace Sans')
@@ -143,144 +110,48 @@ def drawHint(app):
         hintLabel = app.hint[:app.letters] + "_ " * (len(app.hint) - app.letters)
         drawLabel(hintLabel, 410, 831, align = 'center', size = 30, fill = 'white', font = 'Peace Sans')
 
-    # elif app.hintsRemaining >= 0:
-    #     drawLabel('Press h for hint.', 409, 830, align = 'center', fill = 'white', size = 40)
-
     else:
         drawLabel('Press h for hint.', 409, 830, align = 'center', size = 40, fill = 'white', font = 'Peace Sans')
 
 
+# RECURSIVE BACKTRACKING
 
-# -------------------------------------------------------   OLD BOARD GENERATION ----------------------------------------------------------- #
- 
-# def generateValidBoard(wordSet, boardLen=4, minWords=20):
-#     # generates a valid board with a minimum number of words
-#     board = generateBoard(boardLen)
-#     words = random.sample(list(wordSet), min(minWords, len(wordSet)))  # randomly select words from wordSet, from w3: https://www.w3schools.com/python/ref_random_sample.asp
-#     print(f"Selected words: {words}")
+def isLegalBoard(board, legalWords, minWords):
+    foundWords = set()
+
+    for word in legalWords:
+        if searchBoard(board, word):
+            foundWords.add(word)
     
-#     if canPlaceWords(board, words, boardLen, 0, minWords):
-#         fillEmptyCells(board, boardLen)
-#         return board
-#     return generateValidBoard(wordSet, boardLen, minWords)  # retry if board fails
+    return len(foundWords) >= minWords, foundWords
 
-# def findWordsOnBoard(board, wordSet):
-#     boardLen = len(board)
-#     foundWords = set()
+# searches full board
+def searchBoard(board, word):
+    for row in range(len(board)): # iterates through board
+        for col in range(len(board[0])):
+            if board[row][col] == word[0]: # checks to see if there is a word
+                # calls recursive function
+                if searchFromCell(board, word[1:], row, col, {(row, col)}):
+                    return True
+    return False
 
-#     # Helper function to extract a word in a given direction
-#     def extractWord(row, col, drow, dcol):
-#         word = ""
-#         positions = []
-#         while 0 <= row < boardLen and 0 <= col < boardLen:
-#             word += board[row][col]
-#             positions.append((row, col))
-#             if word in wordSet:
-#                 foundWords.add(word)  # Add valid word to foundWords
-#             row += drow
-#             col += dcol
-
-#     # Iterate over each cell and extract words in all directions
-#     for row in range(boardLen):
-#         for col in range(boardLen):
-#             directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-#             for drow, dcol in directions:
-#                 extractWord(row, col, drow, dcol)
-
-#     return foundWords
-
-# def canPlaceWords(board, words, boardLen, index, minWords):
-#     # if all the words are placed
-#     if len(words) == index:
-#         return True
+# searches from specific cell to see if there is a possible word
+def searchFromCell(board, word, row, col, seen):
+    if word == '':
+        return True
     
-#     word = words[index]
-#     # accounts for words that will not fit on the board
-#     if len(word)<=2:
-#         return False
-#     elif not hasValidStart(board, word, boardLen): 
-#         return canPlaceWords(board, words, boardLen, index + 1, minWords)
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
-#     # iterates through every starting point and direction for the word
-#     for row in range(boardLen):
-#         for col in range(boardLen):
-#             locations = []
-#             if placeWord(board, word, boardLen, row, col, 0, set(), locations):
-#                 print(f"Placed word '{word}' at locations: {locations}")
-#                 # recur to place the next word
-#                 if canPlaceWords(board, words, boardLen, index + 1, minWords):
-#                     return True
-#                 # backtrack 
-#                 removeWord(board, locations)
-#                 print(f"Backtracked on word '{word}'")
-#     return False
+    for drow, dcol in directions:
+        # tests the cell
+        newRow, newCol = row + drow, col + dcol
+        if (0 <= newRow < len(board) and 0 <= newCol < len(board[0]) and
+                (newRow, newCol) not in seen and board[newRow][newCol] == word[0]):
+            # recursion
+            if searchFromCell(board, word[1:], newRow, newCol, seen | {(newRow, newCol)}):
+                return True
+    return False
 
-# def placeWord(board, word, boardLen, row, col, index, visited, locations):
-#     # if all letters of word placed
-#     if len(word) == index:
-#         return True
-    
-#     # check bounds and constraints
-#     if (row < 0 or row >= boardLen or col < 0 or col >= boardLen or
-#         (board[row][col] != "" and (board[row][col] != word[index] or (row, col) not in visited)) or
-#         (row, col) in visited):
-#         return False
-    
-#     # places current letter
-#     board[row][col] = word[index]
-#     visited.add((row, col))
-#     locations.append((row, col))
 
-#     # randomizes directions for placement
-#     directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-#     random.shuffle(directions) # code from w3: https://www.w3schools.com/python/ref_random_shuffle.asp
-
-#     for drow, dcol in directions:
-#         if placeWord(board, word, boardLen, row + drow, col + dcol, index + 1, visited, locations):
-#             return True
-    
-#     # backtrack
-#     board[row][col] = ""
-#     visited.remove((row, col))
-#     locations.pop()
-#     return False
-
-# def removeWord(board, locations):
-#     # removes a word from the board for backtracking
-#     for row, col in locations:
-#         board[row][col] = ""
-
-# def fillEmptyCells(board, boardLen):
-#     # fills remaining empty spaces with random letters
-#     for row in range(boardLen):
-#         for col in range(boardLen):
-#             if board[row][col] == "":
-#                 board[row][col] = random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-# # function that determine whether a words even fits initially in the board
-# # shortcuts the excessive backtracking
-# def hasValidStart(board, word, boardLen):
-#     wordLen = len(word)
-#     for row in range(boardLen):
-#         for col in range(boardLen):
-#             if canFit(board, wordLen, boardLen, row, col):
-#                 return True
-#     return False
-
-# def canFit(board, wordLen, boardLen, row, col):
-#     # checks all possible directions
-#     directions = [
-#         (-1, 0), (1, 0), (0, -1), (0, 1),(-1, -1), (-1, 1), (1, -1), (1, 1)]
-#     for drow, dcol in directions:
-#         if isSpaceAvailable(board, wordLen, boardLen, row, col, drow, dcol):
-#             return True
-#     return False
-
-# def isSpaceAvailable(board, wordLen, boardLen, row, col, drow, dcol):
-#     for i in range(wordLen):
-#         newRow, newCol = row + i * drow, col + i * dcol
-#         if newRow < 0 or newRow >= boardLen or newCol < 0 or newCol >= boardLen:
-#             return False
-#     return True
 
 

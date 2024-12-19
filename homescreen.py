@@ -1,8 +1,11 @@
 from cmu_graphics import *
 
 def drawHome(app):
+    # loaded full image instead of separate pngs for efficiency purposes
+    # designed in figma
     drawImage('images/board.png', app.width/2, app.height/2, align = "center")
 
+# button class for input
 class Button:
     def __init__(self, x1, x2, y1, y2, targetScreen):
         self.x1 = x1
